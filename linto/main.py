@@ -58,3 +58,12 @@ class LinTO:
             conversationId=conversation_id,
             jobId=job_id,
         )
+
+    async def share_conversation(self, conversation_id, email, right=1):
+        """Share a conversation with a user by email (READ access by default).
+
+        LinTO Studio sends the notification email automatically.
+        """
+        return await self.api_service.share_conversation(
+            conversationId=conversation_id, email=email, right=right
+        )

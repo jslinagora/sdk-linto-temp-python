@@ -157,6 +157,20 @@ class StudioApiService:
         url = f"{self.base_api_url}/conversations/{conversationId}/export/{jobId}/content"
         return await self._send_request("GET", url, **kwargs)
 
+    # --- Sharing methods ---
+
+    @with_token
+    async def share_conversation(self, conversationId, email, right=1, **kwargs):
+        """Share a conversation with a user by email.
+
+        LinTO Studio automatically sends an email notification.
+        If the user doesn't exist, an external account with magic link is created.
+        """
+        url = f"{self.base_api_url}/conversations/{conversationId}/invite"
+        return await self._send_request(
+            "POST", url, json={"email": email, "right": right}, **kwargs
+        )
+
     async def login(self, email: str, password: str):
         async with aiohttp.ClientSession() as session:
             async with session.post(
