@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linto"
+version = "1.1.2"
+description = "Wrapper around LinTO Studio API"
+requires-python = ">=3.7"
+license = "AGPL-3.0-or-later"
+dependencies = ["aiohttp"]
+
+[project.urls]
+Repository = "https://github.com/jslinagora/sdk-linto-temp-python"
