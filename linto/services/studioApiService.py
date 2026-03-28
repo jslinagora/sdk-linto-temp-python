@@ -127,6 +127,36 @@ class StudioApiService:
 
         return await self._send_request("POST", url, data=form, token=kwargs["token"])
 
+    # --- LLM / Summary methods ---
+
+    @with_token
+    @with_organization_id
+    async def fetch_llm_services(self, **kwargs):
+        """List available LLM services for the organization."""
+        org_id = kwargs["organizationId"]
+        url = f"{self.base_api_url}/services/{org_id}/llm"
+        return await self._send_request("GET", url, **kwargs)
+
+    @with_token
+    async def trigger_summary(self, conversationId, format, flavor=None, **kwargs):
+        """Trigger LLM summary generation for a conversation."""
+        url = f"{self.base_api_url}/conversations/{conversationId}/download?format={format}"
+        if flavor:
+            url += f"&flavor={flavor}"
+        return await self._send_request("POST", url, **kwargs)
+
+    @with_token
+    async def get_export_list(self, conversationId, **kwargs):
+        """Get list of exports for a conversation."""
+        url = f"{self.base_api_url}/conversations/{conversationId}/export/list"
+        return await self._send_request("GET", url, **kwargs)
+
+    @with_token
+    async def get_export_content(self, conversationId, jobId, **kwargs):
+        """Get the content of a completed export."""
+        url = f"{self.base_api_url}/conversations/{conversationId}/export/{jobId}/content"
+        return await self._send_request("GET", url, **kwargs)
+
     async def login(self, email: str, password: str):
         async with aiohttp.ClientSession() as session:
             async with session.post(

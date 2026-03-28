@@ -1,5 +1,6 @@
 from .services.studioApiService import StudioApiService
 from .services.pollingService import PollingService
+from .services.summaryPollingService import SummaryPollingService
 from datetime import datetime
 
 
@@ -26,3 +27,34 @@ class LinTO:
 
     async def list_services(self):
         return await self.api_service.fetch_asr_services()
+
+    async def list_llm_services(self):
+        """List available LLM services."""
+        return await self.api_service.fetch_llm_services()
+
+    async def summarize(self, conversation_id, service_route, flavor=None):
+        """Trigger LLM summary and return a polling handle.
+
+        Returns a SummaryPollingService emitting "done", "error", "update" events.
+        """
+        await self.api_service.trigger_summary(
+            conversationId=conversation_id,
+            format=service_route,
+            flavor=flavor,
+        )
+        return SummaryPollingService(
+            conversation_id, service_route, self.api_service
+        )
+
+    async def get_export_list(self, conversation_id):
+        """Get list of exports for a conversation."""
+        return await self.api_service.get_export_list(
+            conversationId=conversation_id
+        )
+
+    async def get_export_content(self, conversation_id, job_id):
+        """Get the content of a completed export."""
+        return await self.api_service.get_export_content(
+            conversationId=conversation_id,
+            jobId=job_id,
+        )
