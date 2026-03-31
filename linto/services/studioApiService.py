@@ -171,6 +171,35 @@ class StudioApiService:
             "POST", url, json={"email": email, "right": right}, **kwargs
         )
 
+    # --- Publication methods ---
+
+    @with_token
+    @with_organization_id
+    async def get_publication_templates(self, **kwargs):
+        """Get available publication templates for the organization."""
+        org_id = kwargs["organizationId"]
+        url = f"{self.base_api_url}/publication/templates?organization_id={org_id}"
+        return await self._send_request("GET", url, **kwargs)
+
+    @with_token
+    async def get_template_placeholders(self, templateId, **kwargs):
+        """Get placeholders for a specific publication template."""
+        url = f"{self.base_api_url}/publication/templates/{templateId}/placeholders"
+        return await self._send_request("GET", url, **kwargs)
+
+    @with_token
+    async def export_with_template(self, jobId, format, templateId=None, versionNumber=None, **kwargs):
+        """Export a document using a publication template. Returns binary content (PDF/DOCX)."""
+        url = f"{self.base_api_url}/publication/{jobId}/export/{format}"
+        params = []
+        if templateId:
+            params.append(f"templateId={templateId}")
+        if versionNumber is not None:
+            params.append(f"versionNumber={versionNumber}")
+        if params:
+            url += "?" + "&".join(params)
+        return await self._send_request("GET", url, response_type="binary", **kwargs)
+
     async def login(self, email: str, password: str):
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -215,4 +244,6 @@ class StudioApiService:
                         request_info=resp.request_info,
                         history=resp.history,
                     )
+                if kwargs.get("response_type") == "binary":
+                    return await resp.read()
                 return await resp.json()

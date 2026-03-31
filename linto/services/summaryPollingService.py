@@ -51,9 +51,9 @@ class SummaryPollingService(EventEmitter):
                             conversationId=self.conversation_id,
                             jobId=job_id,
                         )
-                        await self.emit("done", content)
+                        await self.emit("done", {"content": content, "jobId": job_id})
                     else:
-                        await self.emit("done", export)
+                        await self.emit("done", {"content": export, "jobId": None})
                     self.stop()
                     break
                 elif status == "error":

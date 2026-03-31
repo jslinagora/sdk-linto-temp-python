@@ -67,3 +67,22 @@ class LinTO:
         return await self.api_service.share_conversation(
             conversationId=conversation_id, email=email, right=right
         )
+
+    async def get_publication_templates(self):
+        """Get available publication templates."""
+        return await self.api_service.get_publication_templates()
+
+    async def get_template_placeholders(self, template_id):
+        """Get placeholders for a specific publication template."""
+        return await self.api_service.get_template_placeholders(
+            templateId=template_id
+        )
+
+    async def export_with_template(self, job_id, format="pdf", template_id=None, version_number=None):
+        """Export a document using a publication template. Returns binary content."""
+        return await self.api_service.export_with_template(
+            jobId=job_id,
+            format=format,
+            templateId=template_id,
+            versionNumber=version_number,
+        )
