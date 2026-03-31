@@ -68,6 +68,13 @@ class LinTO:
             conversationId=conversation_id, email=email, right=right
         )
 
+    async def download_conversation(self, conversation_id, format="docx"):
+        """Download transcription directly (without LLM). Returns binary for docx/odt, dict for json."""
+        return await self.api_service.download_conversation(
+            conversationId=conversation_id,
+            format=format,
+        )
+
     async def get_publication_templates(self):
         """Get available publication templates."""
         return await self.api_service.get_publication_templates()

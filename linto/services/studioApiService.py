@@ -171,6 +171,15 @@ class StudioApiService:
             "POST", url, json={"email": email, "right": right}, **kwargs
         )
 
+    # --- Download methods ---
+
+    @with_token
+    async def download_conversation(self, conversationId, format="docx", **kwargs):
+        """Download transcription in the given format (docx, text, json, etc.)."""
+        url = f"{self.base_api_url}/conversations/{conversationId}/download?format={format}"
+        response_type = "binary" if format in ("docx", "odt", "verbatim") else None
+        return await self._send_request("POST", url, response_type=response_type, **kwargs)
+
     # --- Publication methods ---
 
     @with_token
