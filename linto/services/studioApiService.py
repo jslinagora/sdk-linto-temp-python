@@ -171,6 +171,22 @@ class StudioApiService:
             "POST", url, json={"email": email, "right": right}, **kwargs
         )
 
+    # --- User methods ---
+
+    @with_token
+    async def search_users(self, search, **kwargs):
+        """Search users by email or name."""
+        url = f"{self.base_api_url}/users/search?search={search}"
+        return await self._send_request("GET", url, **kwargs)
+
+    # --- Conversation management methods ---
+
+    @with_token
+    async def update_conversation(self, conversationId, data, **kwargs):
+        """Update conversation fields (owner, sharedWithUsers, etc.)."""
+        url = f"{self.base_api_url}/conversations/{conversationId}"
+        return await self._send_request("PATCH", url, json=data, **kwargs)
+
     # --- Download methods ---
 
     @with_token

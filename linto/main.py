@@ -68,6 +68,43 @@ class LinTO:
             conversationId=conversation_id, email=email, right=right
         )
 
+    async def search_users(self, search):
+        """Search users by email or name."""
+        return await self.api_service.search_users(search=search)
+
+    async def update_conversation(self, conversation_id, data):
+        """Update conversation fields (owner, sharedWithUsers, etc.)."""
+        return await self.api_service.update_conversation(
+            conversationId=conversation_id, data=data
+        )
+
+    async def set_conversation_owner(self, conversation_id, email):
+        """Set conversation owner by email. Removes all other access rights.
+
+        Searches for the user by email, then updates the conversation
+        owner and clears sharedWithUsers and customRights.
+        Returns the userId if successful, None otherwise.
+        """
+        users = await self.search_users(email)
+        if not users:
+            return None
+
+        user_id = None
+        for u in users:
+            if u.get("email", "").lower() == email.lower():
+                user_id = str(u.get("_id", ""))
+                break
+
+        if not user_id:
+            return None
+
+        await self.update_conversation(conversation_id, {
+            "owner": user_id,
+            "sharedWithUsers": [],
+            "organization": {"customRights": []},
+        })
+        return user_id
+
     async def download_conversation(self, conversation_id, format="docx"):
         """Download transcription directly (without LLM). Returns binary for docx/odt, dict for json."""
         return await self.api_service.download_conversation(
