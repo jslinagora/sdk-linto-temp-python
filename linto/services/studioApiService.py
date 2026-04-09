@@ -269,6 +269,8 @@ class StudioApiService:
                         request_info=resp.request_info,
                         history=resp.history,
                     )
+                if resp.status == 204:
+                    return None
                 if kwargs.get("response_type") == "binary":
                     return await resp.read()
                 return await resp.json()
