@@ -171,6 +171,97 @@ class StudioApiService:
             "POST", url, json={"email": email, "right": right}, **kwargs
         )
 
+    # --- Taxonomy methods (categories, tags, folders) ---
+
+    @with_token
+    @with_organization_id
+    async def list_categories(self, **kwargs):
+        """List categories of the organization."""
+        org_id = kwargs["organizationId"]
+        url = f"{self.base_api_url}/organizations/{org_id}/categories"
+        return await self._send_request("GET", url, **kwargs)
+
+    @with_token
+    @with_organization_id
+    async def list_tags(self, categoryId, **kwargs):
+        """List tags of a category."""
+        org_id = kwargs["organizationId"]
+        url = (
+            f"{self.base_api_url}/organizations/{org_id}/tags"
+            f"?categoryId={categoryId}"
+        )
+        return await self._send_request("GET", url, **kwargs)
+
+    @with_token
+    @with_organization_id
+    async def create_tag(
+        self, categoryId, name, color=None, emoji=None, description=None, **kwargs
+    ):
+        """Create a tag inside a category."""
+        org_id = kwargs["organizationId"]
+        url = f"{self.base_api_url}/organizations/{org_id}/tags"
+        payload = {
+            "organizationId": org_id,
+            "categoryId": categoryId,
+            "name": name,
+        }
+        if color is not None:
+            payload["color"] = color
+        if emoji is not None:
+            payload["emoji"] = emoji
+        if description is not None:
+            payload["description"] = description
+        return await self._send_request("POST", url, json=payload, **kwargs)
+
+    @with_token
+    @with_organization_id
+    async def list_folders(self, tree=False, withConversationCount=False, **kwargs):
+        """List folders of the organization."""
+        org_id = kwargs["organizationId"]
+        params = []
+        if tree:
+            params.append("tree=true")
+        if withConversationCount:
+            params.append("withConversationCount=true")
+        url = f"{self.base_api_url}/organizations/{org_id}/folders"
+        if params:
+            url += "?" + "&".join(params)
+        return await self._send_request("GET", url, **kwargs)
+
+    @with_token
+    @with_organization_id
+    async def create_folder(
+        self, name, parentId=None, color=None, emoji=None, visibility="public", **kwargs
+    ):
+        """Create a folder in the organization."""
+        org_id = kwargs["organizationId"]
+        url = f"{self.base_api_url}/organizations/{org_id}/folders"
+        payload = {"name": name, "visibility": visibility}
+        if parentId is not None:
+            payload["parentId"] = parentId
+        if color is not None:
+            payload["color"] = color
+        if emoji is not None:
+            payload["emoji"] = emoji
+        return await self._send_request("POST", url, json=payload, **kwargs)
+
+    @with_token
+    @with_organization_id
+    async def move_conversation_to_folder(self, folderId, conversationId, **kwargs):
+        """Move a conversation into a folder (a conversation has at most one folder)."""
+        org_id = kwargs["organizationId"]
+        url = (
+            f"{self.base_api_url}/organizations/{org_id}/folders/"
+            f"{folderId}/conversations/{conversationId}"
+        )
+        return await self._send_request("POST", url, **kwargs)
+
+    @with_token
+    async def get_conversation(self, conversationId, **kwargs):
+        """Fetch a conversation by id (raw response)."""
+        url = f"{self.base_api_url}/conversations/{conversationId}"
+        return await self._send_request("GET", url, **kwargs)
+
     # --- User methods ---
 
     @with_token

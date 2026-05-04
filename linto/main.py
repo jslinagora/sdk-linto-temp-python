@@ -130,3 +130,103 @@ class LinTO:
             templateId=template_id,
             versionNumber=version_number,
         )
+
+    # --- Taxonomy: categories, tags, folders ---
+
+    async def list_categories(self):
+        """List categories of the current organization."""
+        return await self.api_service.list_categories()
+
+    async def list_tags(self, category_id):
+        """List tags of a category."""
+        return await self.api_service.list_tags(categoryId=category_id)
+
+    async def create_tag(self, category_id, name, color=None, emoji=None):
+        """Create a tag inside a category. Returns the created tag dict."""
+        return await self.api_service.create_tag(
+            categoryId=category_id, name=name, color=color, emoji=emoji
+        )
+
+    async def ensure_tag(self, name, category_name="Meeting", color=None, emoji=None):
+        """Return tag id for `name` in category `category_name`, creating both if needed.
+
+        Falls back to the first available category when `category_name` is missing.
+        Returns None if no category exists at all.
+        """
+        categories = await self.list_categories()
+        if not isinstance(categories, list) or not categories:
+            return None
+
+        cat = None
+        for c in categories:
+            if str(c.get("name", "")).lower() == category_name.lower():
+                cat = c
+                break
+        if cat is None:
+            cat = categories[0]
+        category_id = str(cat.get("_id") or cat.get("id") or "")
+        if not category_id:
+            return None
+
+        tags = await self.list_tags(category_id)
+        if isinstance(tags, list):
+            for t in tags:
+                if str(t.get("name", "")).lower() == name.lower():
+                    return str(t.get("_id") or t.get("id") or "")
+
+        created = await self.create_tag(
+            category_id=category_id, name=name, color=color, emoji=emoji
+        )
+        if isinstance(created, dict):
+            return str(created.get("_id") or created.get("id") or "") or None
+        return None
+
+    async def add_conversation_tag(self, conversation_id, tag_id):
+        """Append a tag to a conversation, preserving existing tags."""
+        if not tag_id:
+            return None
+        conv = await self.api_service.get_conversation(
+            conversationId=conversation_id
+        )
+        existing = []
+        if isinstance(conv, dict):
+            raw = conv.get("tags") or []
+            if isinstance(raw, list):
+                existing = [str(t) for t in raw if t]
+        if tag_id in existing:
+            return existing
+        new_tags = existing + [tag_id]
+        await self.update_conversation(conversation_id, {"tags": new_tags})
+        return new_tags
+
+    async def list_folders(self):
+        """List folders of the current organization."""
+        return await self.api_service.list_folders()
+
+    async def create_folder(self, name, parent_id=None, color=None, emoji=None):
+        """Create a folder. Returns the created folder dict."""
+        return await self.api_service.create_folder(
+            name=name, parentId=parent_id, color=color, emoji=emoji
+        )
+
+    async def ensure_folder(self, name, parent_id=None):
+        """Return folder id for `name` (root level by default), creating it if needed."""
+        folders = await self.list_folders()
+        if isinstance(folders, list):
+            for f in folders:
+                if (
+                    str(f.get("name", "")).lower() == name.lower()
+                    and (f.get("parentId") or None) == parent_id
+                ):
+                    return str(f.get("_id") or f.get("id") or "")
+
+        created = await self.create_folder(name=name, parent_id=parent_id)
+        if isinstance(created, dict):
+            return str(created.get("_id") or created.get("id") or "") or None
+        return None
+
+    async def move_to_folder(self, folder_id, conversation_id):
+        """Move a conversation into a folder."""
+        return await self.api_service.move_conversation_to_folder(
+            folderId=folder_id, conversationId=conversation_id
+        )
