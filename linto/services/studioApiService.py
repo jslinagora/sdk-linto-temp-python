@@ -125,6 +125,9 @@ class StudioApiService:
         form.add_field("lang", kwargs["lang"])
         form.add_field("endpoint", kwargs["endpoint"])
 
+        if kwargs.get("membersRight") is not None:
+            form.add_field("membersRight", str(int(kwargs["membersRight"])))
+
         return await self._send_request("POST", url, data=form, token=kwargs["token"])
 
     # --- LLM / Summary methods ---
