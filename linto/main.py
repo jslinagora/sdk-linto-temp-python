@@ -204,14 +204,20 @@ class LinTO:
         """List folders of the current organization."""
         return await self.api_service.list_folders()
 
-    async def create_folder(self, name, parent_id=None, color=None, emoji=None):
+    async def create_folder(self, name, parent_id=None, color=None, emoji=None, visibility="public"):
         """Create a folder. Returns the created folder dict."""
         return await self.api_service.create_folder(
-            name=name, parentId=parent_id, color=color, emoji=emoji
+            name=name, parentId=parent_id, color=color, emoji=emoji,
+            visibility=visibility,
         )
 
-    async def ensure_folder(self, name, parent_id=None):
-        """Return folder id for `name` (root level by default), creating it if needed."""
+    async def ensure_folder(self, name, parent_id=None, visibility="public"):
+        """Return folder id for `name` (root level by default), creating it if needed.
+
+        When created with visibility='private', the service account becomes
+        the folder owner and conversations moved into it get
+        membersRight=UNDEFINED — invisible to org members below MAINTAINER.
+        """
         folders = await self.list_folders()
         if isinstance(folders, list):
             for f in folders:
@@ -221,7 +227,9 @@ class LinTO:
                 ):
                     return str(f.get("_id") or f.get("id") or "")
 
-        created = await self.create_folder(name=name, parent_id=parent_id)
+        created = await self.create_folder(
+            name=name, parent_id=parent_id, visibility=visibility,
+        )
         if isinstance(created, dict):
             return str(created.get("_id") or created.get("id") or "") or None
         return None
