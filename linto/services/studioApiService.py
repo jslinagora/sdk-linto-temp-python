@@ -163,16 +163,18 @@ class StudioApiService:
     # --- Sharing methods ---
 
     @with_token
-    async def share_conversation(self, conversationId, email, right=1, **kwargs):
+    async def share_conversation(self, conversationId, email, right=1, notify=True, **kwargs):
         """Share a conversation with a user by email.
 
-        LinTO Studio automatically sends an email notification.
+        By default LinTO Studio sends an email notification. Pass notify=False
+        to suppress it (useful when the caller already manages user comms).
         If the user doesn't exist, an external account with magic link is created.
         """
         url = f"{self.base_api_url}/conversations/{conversationId}/invite"
-        return await self._send_request(
-            "POST", url, json={"email": email, "right": right}, **kwargs
-        )
+        payload = {"email": email, "right": right}
+        if not notify:
+            payload["notify"] = False
+        return await self._send_request("POST", url, json=payload, **kwargs)
 
     # --- Taxonomy methods (categories, tags, folders) ---
 
